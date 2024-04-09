@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./programs/bridge-solana/Cargo.toml"
+    ]
+}
