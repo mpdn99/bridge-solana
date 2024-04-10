@@ -4,14 +4,13 @@ use anchor_lang::prelude::*;
 #[derive(Default)]
 pub struct Bridge {
     pub admin: Pubkey,
-    pub fee_collector: Pubkey,
     pub unlocker: Pubkey,
     pub fee: u16,
     pub nonce: u64,
 }
 
 impl Bridge {
-    pub const LEN: usize = 8 + 32 + 32 + 32 + 2 + 16;
+    pub const LEN: usize = 8 + 32 + 32 + 32 + 2 + 8;
 }
 
 #[account]
@@ -22,5 +21,5 @@ pub struct ProcessedNonce {
 }
 
 impl ProcessedNonce {
-    pub const LEN: usize = 8 + 16 + 1;
+    pub const LEN: usize = 8 + 8 + 1;
 }

@@ -3,15 +3,11 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token::{Mint, Token, TokenAccount},
 };
-use crate::{
-    constants::AUTHORITY_SEED,
-    state::Bridge,
-};
+use crate::*;
 
 pub fn create_bridge(ctx: Context<CreateBridge>, fee: u16) -> Result<()> {
     let bridge = &mut ctx.accounts.bridge;
     bridge.admin = *ctx.accounts.admin.key;
-    bridge.fee_collector = *ctx.accounts.fee_collector.key;
     bridge.unlocker = *ctx.accounts.unlocker.key;
     bridge.fee = fee;
     bridge.nonce = 1;
@@ -32,19 +28,21 @@ pub struct CreateBridge<'info> {
     pub mint_bukh: Box<Account<'info, Mint>>,
     pub mint_sukh: Box<Account<'info, Mint>>,
 
+    /// CHECK: Read only authority
     #[account(
         seeds = [
             mint_bukh.key().as_ref(),
-            AUTHORITY_SEED.as_ref(),
+            constants::AUTHORITY_SEED.as_ref(),
         ],
         bump
     )]
     pub pool_bukh_authority: AccountInfo<'info>,
 
+    /// CHECK: Read only authority
     #[account(
         seeds = [
             mint_sukh.key().as_ref(),
-            AUTHORITY_SEED.as_ref(),
+            constants::AUTHORITY_SEED.as_ref(),
         ],
         bump
     )]
@@ -68,7 +66,7 @@ pub struct CreateBridge<'info> {
 
     #[account(mut)]
     pub admin: Signer<'info>,
-    pub fee_collector: AccountInfo<'info>,
+    /// CHECK: Read only
     pub unlocker: AccountInfo<'info>,
 
     pub token_program: Program<'info, Token>,

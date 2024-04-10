@@ -4,4 +4,8 @@ use anchor_lang::prelude::*;
 pub enum BridgeError {
     #[msg("Invalid amount value")]
     InvalidAmount,
+    #[msg("Signature verification failed.")]
+    SigVerificationFailed,
+    #[msg("Nonce already processed.")]
+    NonceAlreadyProcessed,
 }

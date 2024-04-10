@@ -1,9 +1,7 @@
 use anchor_lang::prelude::*;
 
-use crate::*;
-
 #[event]
-pub struct LockTokenEvent {
+pub struct BridgeTransferEvent {
     #[index]
     pub mint: Pubkey,
     #[index]
@@ -12,4 +10,10 @@ pub struct LockTokenEvent {
     pub to: Pubkey,
     pub amount: u64,
     pub nonce: u64,
+}
+
+#[event]
+pub struct FeeReleasedToCollectorEvent {
+    #[index]
+    pub unlock_fee: u64,
 }

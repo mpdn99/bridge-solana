@@ -1,6 +1,7 @@
-use crate::{errors::*, state::Bridge, events::*};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, Transfer};
+
+use crate::*;
 
 pub fn lock_token(ctx: Context<LockToken>, amount: u64) -> Result<()> {
     if amount == 0 {
@@ -18,7 +19,7 @@ pub fn lock_token(ctx: Context<LockToken>, amount: u64) -> Result<()> {
         amount,
     )?;
 
-    emit!(LockTokenEvent {
+    emit!(BridgeTransferEvent {
         mint: ctx.accounts.mint.key(),
         from: ctx.accounts.user.key(),
         to: ctx.accounts.bridge.key(),
