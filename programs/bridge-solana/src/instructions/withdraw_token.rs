@@ -9,8 +9,8 @@ use crate::*;
 
 pub fn withdraw_token(
     ctx: Context<WithdrawToken>,
-    amount: u64,
     nonce: u64,
+    amount: u64,
     sig: [u8; 64],
 ) -> Result<()> {
     if amount == 0 {
@@ -49,8 +49,8 @@ pub fn withdraw_token(
 
     emit!(BridgeTransferEvent {
         mint: ctx.accounts.mint.key(),
-        from: bridge.key(),
-        to: ctx.accounts.user_account.key(),
+        from: ctx.accounts.pool.key(),
+        to: ctx.accounts.payer_account.key(),
         amount,
         nonce: bridge.nonce,
     });
@@ -63,9 +63,9 @@ pub fn withdraw_token(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             Transfer {
-                from: bridge.to_account_info(),
-                to: ctx.accounts.sender.to_account_info(),
-                authority: bridge.to_account_info(),
+                from: ctx.accounts.pool.to_account_info(),
+                to: ctx.accounts.payer_account.to_account_info(),
+                authority: ctx.accounts.pool_authority.to_account_info(),
             },
             signer_seeds,
         ),
@@ -76,9 +76,8 @@ pub fn withdraw_token(
 }
 
 #[derive(Accounts)]
-#[instruction(nonce: u64)]
+#[instruction(nonce: u64, amount: u64, sig: [u8; 64])]
 pub struct WithdrawToken<'info> {
-    pub sender: Signer<'info>,
     /// CHECK: The address check is needed because otherwise
     #[account(address = IX_ID)]
     pub ix_sysvar: AccountInfo<'info>,
@@ -93,22 +92,24 @@ pub struct WithdrawToken<'info> {
         payer = payer,
         space = ProcessedNonce::LEN,
         seeds = [
-            &nonce.to_le_bytes(),
+            constants::NONCE_SEED.as_ref(),
+            nonce.to_le_bytes().as_ref(),
         ],
         bump
     )]
     pub processed_nonce: Account<'info, ProcessedNonce>,
     #[account(mut)]
-    pub payer: AccountInfo<'info>,
+    pub payer: Signer<'info>,
 
     #[account(
         init_if_needed,
         payer = payer,
         associated_token::mint = mint,
-        associated_token::authority = user_account,
+        associated_token::authority = payer,
     )]
-    pub user_account: Account<'info, TokenAccount>,
+    pub payer_account: Account<'info, TokenAccount>,
 
+    /// CHECK: Read only authority
     #[account(
         seeds = [
             mint.key().as_ref(),

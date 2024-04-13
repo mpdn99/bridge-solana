@@ -45,6 +45,7 @@ pub struct OwnerWithdraw<'info> {
     #[account(mut)]
     pub bridge: Account<'info, Bridge>,
 
+    /// CHECK: Read only authority
     #[account(
         seeds = [
             mint.key().as_ref(),

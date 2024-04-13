@@ -14,7 +14,7 @@ pub use errors::*;
 pub use utils::*;
 
 
-declare_id!("3s5RTyytWRct96npYMiBvpQ9CbbjecgFaibvsSS4vPWn");
+declare_id!("7EocgqrRm3AzYotTpATdwh7Uwyc1Zcn2mQELAw7b6HE6");
 
 #[program]
 pub mod bridge_solana {
@@ -34,5 +34,9 @@ pub mod bridge_solana {
         sig: [u8; 64],
     ) -> Result<()> {
         instructions::withdraw_token::withdraw_token(ctx, amount, nonce, sig)
+    }
+
+    pub fn owner_withdraw(ctx: Context<OwnerWithdraw>, amount: u64) -> Result<()> {
+        instructions::owner_withdraw::owner_withdraw(ctx, amount)
     }
 }

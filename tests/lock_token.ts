@@ -1,29 +1,23 @@
 import * as anchor from "@project-serum/anchor";
 import { BridgeSolana } from "../target/types/bridge_solana";
 import {
+    createAssociatedTokenAccount,
   createMint,
   getAssociatedTokenAddressSync,
-  getOrCreateAssociatedTokenAccount,
   mintTo,
 } from "@solana/spl-token";
-import { ed25519 } from "@noble/curves/ed25519";
-import { BN } from "bn.js";
 import { expect } from "chai";
 
-describe("Withdraw Token", () => {
-  let userAccount: anchor.web3.PublicKey;
-  let amount = 100;
-  let nonce = 1;
-
+describe("Lock token", () => {
   const provider = anchor.AnchorProvider.env();
   const connection = provider.connection;
   anchor.setProvider(provider);
 
   const program = anchor.workspace.BridgeSolana as anchor.Program<BridgeSolana>;
 
-  const user: anchor.web3.Keypair = anchor.web3.Keypair.generate();
   const unlocker: anchor.web3.Keypair = anchor.web3.Keypair.generate();
   const admin = anchor.web3.Keypair.generate();
+  const user = anchor.web3.Keypair.generate();
 
   const bridgeKeypair = anchor.web3.Keypair.generate();
   const mintBukhKeypair = anchor.web3.Keypair.generate();
@@ -39,11 +33,6 @@ describe("Withdraw Token", () => {
     program.programId
   )[0];
 
-  const processedNonce = anchor.web3.PublicKey.findProgramAddressSync(
-    [Buffer.from("nonce"), new BN(nonce).toArrayLike(Buffer, "le", 8)],
-    program.programId
-  )[0];
-
   const poolBukh = getAssociatedTokenAddressSync(
     mintBukhKeypair.publicKey,
     poolBukhAuthority,
@@ -56,15 +45,10 @@ describe("Withdraw Token", () => {
     true
   );
 
-  let signature: Uint8Array; // 64 bytes of sig
-
-  let message = Buffer.concat([
-    Buffer.from(mintBukhKeypair.publicKey.toString()),
-    Buffer.from(amount.toString()),
-    Buffer.from(nonce.toString()),
-  ]);
+  let userAccount: anchor.web3.PublicKey;
 
   before(async () => {
+    // Fund person
     let txid = await provider.connection.requestAirdrop(
       admin.publicKey,
       5 * anchor.web3.LAMPORTS_PER_SOL
@@ -105,7 +89,7 @@ describe("Withdraw Token", () => {
       mintSukhKeypair
     );
 
-    await getOrCreateAssociatedTokenAccount(
+    await createAssociatedTokenAccount(
       connection,
       user,
       mintBukhKeypair.publicKey,
@@ -116,6 +100,15 @@ describe("Withdraw Token", () => {
       mintBukhKeypair.publicKey,
       user.publicKey,
       true
+    );
+
+    await mintTo(
+      connection,
+      admin,
+      mintBukhKeypair.publicKey,
+      userAccount,
+      admin.publicKey,
+      100
     );
 
     await program.methods
@@ -132,66 +125,41 @@ describe("Withdraw Token", () => {
         admin: admin.publicKey,
       })
       .signers([bridgeKeypair, admin])
-      .rpc()
+      .rpc({ skipPreflight: false })
       .catch((err) => {
         console.log(err);
       });
-
-    await mintTo(
-      connection,
-      admin,
-      mintBukhKeypair.publicKey,
-      poolBukh,
-      admin.publicKey,
-      100
-    );
-
-    signature = ed25519.sign(message, unlocker.secretKey.slice(0, 32));
   });
 
-  it("Withdraw Token", async () => {
+  it("Lock token sucessfully", async () => {
     const listenerMyEvent = program.addEventListener(
       "BridgeTransferEvent",
       (event) => {
         expect(event.mint.toString()).to.be.equal(
           mintBukhKeypair.publicKey.toString()
         );
-        expect(event.from.toString()).to.be.equal(poolBukh.toString());
-        expect(event.to.toString()).to.be.equal(userAccount.toString());
-        expect(event.amount.toString()).to.be.equal((amount-amount*10/1000).toString());
-        expect(event.nonce.toString()).to.be.equal(nonce.toString());
+        expect(event.from.toString()).to.be.equal(userAccount.toString());
+        expect(event.to.toString()).to.be.equal(poolBukh.toString());
+        expect(event.amount.toString()).to.be.equal("100");
+        expect(event.nonce.toString()).to.be.equal("1");
       }
     );
     await program.methods
-      .withdrawToken(
-        new anchor.BN(nonce),
-        new anchor.BN(amount),
-        Array.from(signature)
-      )
+      .lockToken(new anchor.BN(100))
       .accounts({
-        ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-        mint: mintBukhKeypair.publicKey,
         bridge: bridgeKeypair.publicKey,
-        payer: user.publicKey,
-        pool: poolBukh,
-        poolAuthority: poolBukhAuthority,
+        mint: mintBukhKeypair.publicKey,
         payerAccount: userAccount,
-        processedNonce: processedNonce,
+        poolAuthority: poolBukhAuthority,
+        pool: poolBukh,
+        payer: user.publicKey,
       })
       .signers([user])
-      .preInstructions([
-        anchor.web3.Ed25519Program.createInstructionWithPublicKey({
-          publicKey: unlocker.publicKey.toBytes(),
-          message: message,
-          signature: signature,
-        }),
-      ])
       .rpc()
       .catch((err) => {
         console.log(err);
-        throw err;
       });
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      program.removeEventListener(listenerMyEvent);
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    program.removeEventListener(listenerMyEvent);
   });
 });
