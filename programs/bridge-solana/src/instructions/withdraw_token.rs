@@ -52,7 +52,7 @@ pub fn withdraw_token(
         from: ctx.accounts.pool.key(),
         to: ctx.accounts.payer_account.key(),
         amount,
-        nonce: bridge.nonce,
+        nonce: nonce,
     });
 
     if unlock_fee > 0 {

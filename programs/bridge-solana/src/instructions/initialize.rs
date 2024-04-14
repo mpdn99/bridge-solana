@@ -5,7 +5,7 @@ use anchor_spl::{
 };
 use crate::*;
 
-pub fn create_bridge(ctx: Context<CreateBridge>, fee: u16) -> Result<()> {
+pub fn initialize(ctx: Context<Initialize>, fee: u16) -> Result<()> {
     let bridge = &mut ctx.accounts.bridge;
     bridge.admin = *ctx.accounts.admin.key;
     bridge.unlocker = *ctx.accounts.unlocker.key;
@@ -17,11 +17,15 @@ pub fn create_bridge(ctx: Context<CreateBridge>, fee: u16) -> Result<()> {
 
 #[derive(Accounts)]
 #[instruction(fee: u16)]
-pub struct CreateBridge<'info> {
+pub struct Initialize<'info> {
     #[account(
         init, 
         payer = admin, 
-        space = Bridge::LEN
+        space = Bridge::LEN,
+        seeds = [
+            constants::PREFIX.as_bytes(),
+        ],
+        bump
     )]
     pub bridge: Account<'info, Bridge>,
 

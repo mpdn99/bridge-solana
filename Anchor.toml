@@ -5,10 +5,10 @@ seeds = false
 skip-lint = false
 
 [programs.devnet]
-bridge_solana = "7EocgqrRm3AzYotTpATdwh7Uwyc1Zcn2mQELAw7b6HE6"
+bridge_solana = "HEMyDNhTcEu1Xhqk4pUMTQvQ42kx3C63FBjN4BgBTXnB"
 
 [programs.localnet]
-bridge_solana = "7EocgqrRm3AzYotTpATdwh7Uwyc1Zcn2mQELAw7b6HE6"
+bridge_solana = "HEMyDNhTcEu1Xhqk4pUMTQvQ42kx3C63FBjN4BgBTXnB"
 
 [registry]
 url = "https://api.apr.dev"
@@ -18,5 +18,5 @@ cluster = "Devnet"
 wallet = "/home/solashi/.config/solana/id.json"
 
 [scripts]
-create-bridge = "yarn run ts-node -r tsconfig-paths/register scripts/create-bridge.ts"
+initialize = "yarn run ts-node -r tsconfig-paths/register scripts/initialize.ts"
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

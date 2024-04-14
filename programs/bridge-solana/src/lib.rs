@@ -14,14 +14,14 @@ pub use errors::*;
 pub use utils::*;
 
 
-declare_id!("7EocgqrRm3AzYotTpATdwh7Uwyc1Zcn2mQELAw7b6HE6");
+declare_id!("HEMyDNhTcEu1Xhqk4pUMTQvQ42kx3C63FBjN4BgBTXnB");
 
 #[program]
 pub mod bridge_solana {
     use super::*;
 
-    pub fn create_bridge(ctx: Context<CreateBridge>, fee: u16) -> Result<()> {
-        instructions::create_bridge::create_bridge(ctx, fee)
+    pub fn initialize(ctx: Context<Initialize>, fee: u16) -> Result<()> {
+        instructions::initialize::initialize(ctx, fee)
     }
     pub fn lock_token(ctx: Context<LockToken>, amount: u64) -> Result<()> {
         instructions::lock_token::lock_token(ctx, amount)

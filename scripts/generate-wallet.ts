@@ -9,7 +9,6 @@ async function initializeKeypair(connection : web3.Connection) {
         const signer = web3.Keypair.generate();
 
         console.log("Creating .env file...");
-        fs.appendFileSync('.env', `PUBLIC_KEY=${signer.publicKey.toString()}\n`);
         fs.appendFileSync('.env', `PRIVATE_KEY=[${signer.secretKey.toString()}]\n`);
 
         await airdropSolIfNeeded(signer, connection);
